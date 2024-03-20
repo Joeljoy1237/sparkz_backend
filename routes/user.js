@@ -8,19 +8,19 @@ const verifyToken = require("../utils/authMiddleware");
 
 dotenv.config();
 
-const {
-  roles,
-  twohundredResponse,
-  fourNotNineResponse,
-  resMessages,
-  twoNotOneResponse,
-  sanitizedUserList,
-  abstractedUserData,
-  customError,
-  sanitizedLetterList,
-  sanitizedLetterData,
-  formatDate,
-} = require("../Utils/Helpers");
+// const {
+//   roles,
+//   twohundredResponse,
+//   fourNotNineResponse,
+//   resMessages,
+//   twoNotOneResponse,
+//   sanitizedUserList,
+//   abstractedUserData,
+//   customError,
+//   sanitizedLetterList,
+//   sanitizedLetterData,
+//   formatDate,
+// } = require("../Utils/Helpers");
 
 const saltRounds = 12;
 
@@ -43,8 +43,8 @@ router.post("/register", async (req, res) => {
       return res.status(200).json({ status: "ok" });
     }
     res.status(409).json({
-      message: resMessages.emailAlreadyExistsMsg,
-      status: fourNotNineResponse,
+      message: "error",
+      status: 409,
     });
   } catch (err) {
     console.error(err);
@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
 
       throw {
         status: 403,
-        message: resMessages.AccountLockedMsg,
+        // message: resMessages.AccountLockedMsg,
         description: `Please try again after ${timeDifferenceInMinutes} minutes`,
       };
     }
