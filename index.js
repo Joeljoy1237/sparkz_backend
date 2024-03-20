@@ -60,7 +60,7 @@ app.get("/api/v2/", (req, res) => {
 //         });
 // };
 
-app.listen(process.env.PORT, async () => {
+app.listen(process.env.PORT || 9000, async () => {
   // connectDb();
   console.log(`Server started listening at port ${process.env.PORT}`);
 });
