@@ -42,6 +42,34 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
+userSchema.set('toJSON', {
+  transform: function (doc, ret, options) {
+    const createdAt = moment(ret.createdAt);
+    const updatedAt = moment(ret.updatedAt);
+
+    const now = moment();
+    const createdAgo = createdAt.from(now);
+    const updatedAgo = updatedAt.from(now);
+
+    ret.createdAt = {
+      date: createdAt.format('DD/MM/YYYY , HH:mm'),
+      ago: createdAgo
+    };
+
+    ret.updatedAt = {
+      date: updatedAt.format('DD/MM/YYYY , HH:mm'),
+      ago: updatedAgo
+    };
+
+    return ret;
+  }
+});
+
+userSchema.pre('save', function (next) {
+  this.updatedAt = new Date();
+  next();
+});
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

@@ -64,6 +64,34 @@ const eventSchema = new mongoose.Schema({
   ],
 });
 
+eventSchema.set('toJSON', {
+  transform: function (doc, ret, options) {
+    const createdAt = moment(ret.createdAt);
+    const updatedAt = moment(ret.updatedAt);
+
+    const now = moment();
+    const createdAgo = createdAt.from(now);
+    const updatedAgo = updatedAt.from(now);
+
+    ret.createdAt = {
+      date: createdAt.format('DD/MM/YYYY , HH:mm'),
+      ago: createdAgo
+    };
+
+    ret.updatedAt = {
+      date: updatedAt.format('DD/MM/YYYY , HH:mm'),
+      ago: updatedAgo
+    };
+
+    return ret;
+  }
+});
+
+eventSchema.pre('save', function (next) {
+  this.updatedAt = new Date();
+  next();
+});
+
 const Event = mongoose.model("Event", eventSchema);
 
 module.exports = Event;
