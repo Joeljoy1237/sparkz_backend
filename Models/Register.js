@@ -2,11 +2,19 @@ const mongoose = require("mongoose");
 
 const registerSchema = new mongoose.Schema(
   {
+    registeredUserId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'User'
+    },
+    eventId: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Event'
+    },
     eventName: {
       type: String,
       required: true,
     },
-    department: {
+    conductedBy: {
       type: String,
       require: true,
     },
