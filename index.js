@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const userRoute = require("./routes/user");
-const eventRoute = require("./routes/event");
+const adminRoute = require("./routes/admin");
 const connectToDB = require("./utils/database");
 
 connectToDB();
@@ -29,7 +29,7 @@ app.use(bodyParser.json());
 // };
 
 app.use("/api/v1/user", userRoute);
-app.use("/api/v1/event", eventRoute);
+app.use("/api/v1/admin", adminRoute);
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");

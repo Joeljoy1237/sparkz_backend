@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Event = require("../Models/Event");
+
 router.post("/new", (req, res) => {
   try {
     const data = { ...req.body };
@@ -24,7 +25,7 @@ router.post("/new", (req, res) => {
     });
     event.save();
     console.log(data.title);
-    res.status(201).json({ status: "ok" });
+    return res.status(201).json({ status: "ok" });
   } catch (err) {
     console.log(err);
     res.status(500);
