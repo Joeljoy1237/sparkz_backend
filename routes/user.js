@@ -48,7 +48,7 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -92,22 +92,24 @@ router.post("/login", async (req, res) => {
         }
       );
 
-      res.status(200).json({ token });
+      return res.status(200).json({ token });
     } else {
       user.loginAttempts += 1;
       if (user.loginAttempts >= 3) {
         user.lockUntil = new Date(Date.now() + 10 * 60 * 1000); // Lock for 10 minutes
       }
       await user.save();
-      res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(err.status || 500)
+      .json({ error: err.description || "Internal server error" });
   }
 });
 
 router.get("/profile", verifyToken, (req, res) => {
-  res.status(200).json({ message: "Protected route accessed" });
+  return res.status(200).json({ message: "Protected route accessed" });
 });
 module.exports = router;
