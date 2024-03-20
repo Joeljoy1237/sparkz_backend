@@ -11,6 +11,7 @@ dotenv.config();
 const {
   roles,
   twohundredResponse,
+  fourNotNineResponse,
   resMessages,
   twoNotOneResponse,
   sanitizedUserList,
@@ -26,18 +27,25 @@ const saltRounds = 12;
 // Register endpoint
 router.post("/register", async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
-    const user = new User({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      password: hashedPassword,
-      semester: req.body.semester,
-      college: req.body.college,
-      department: req.body.department,
+    const userExist = await User.findOne({ email: req.body.email });
+    if (!userExist) {
+      const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+      const user = new User({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        password: hashedPassword,
+        semester: req.body.semester,
+        college: req.body.college,
+        department: req.body.department,
+      });
+      await user.save();
+      return res.status(200).json({ status: "ok" });
+    }
+    res.status(409).json({
+      message: resMessages.emailAlreadyExistsMsg,
+      status: fourNotNineResponse,
     });
-    await user.save();
-    res.status(200).json({ status: "ok" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -51,11 +59,28 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    if (user.lockUntil > new Date()) {
+      const timeDifferenceInMilliseconds = user.lockUntil - new Date();
+      const timeDifferenceInMinutes = Math.ceil(
+        timeDifferenceInMilliseconds / (1000 * 60)
+      );
+
+      throw {
+        status: 403,
+        message: resMessages.AccountLockedMsg,
+        description: `Please try again after ${timeDifferenceInMinutes} minutes`,
+      };
+    }
+
     const passwordMatch = await bcrypt.compare(
       req.body.password,
       user.password
     );
     if (passwordMatch) {
+      user.loginAttempts = 0;
+      user.lockUntil = new Date(0);
+      await user.save();
       const token = jwt.sign(
         {
           userId: user._id,
@@ -66,8 +91,14 @@ router.post("/login", async (req, res) => {
           expiresIn: "1h",
         }
       );
+
       res.status(200).json({ token });
     } else {
+      user.loginAttempts += 1;
+      if (user.loginAttempts >= 3) {
+        user.lockUntil = new Date(Date.now() + 10 * 60 * 1000); // Lock for 10 minutes
+      }
+      await user.save();
       res.status(401).json({ message: "Invalid credentials" });
     }
   } catch (err) {
