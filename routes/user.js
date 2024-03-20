@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const verifyToken = require("../utils/authMiddleware");
+const { customError, twohundredResponse } = require("../utils/Helpers");
 
 dotenv.config();
 
@@ -28,6 +29,11 @@ const saltRounds = 12;
 router.post("/register", async (req, res) => {
   try {
     const userExist = await User.findOne({ email: req.body.email });
+
+    if (userExist) {
+      throw { status: 409, message: "User already exists", description: "Please try again with another email" }
+    }
+
     if (!userExist) {
       const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
       const user = new User({
@@ -40,15 +46,17 @@ router.post("/register", async (req, res) => {
         department: req.body.department,
       });
       await user.save();
-      return res.status(200).json({ status: "ok" });
+
+      const successResponse = twohundredResponse({ message: "Resgistered successfully", redirectUrl: "/login" })
+      return res.status(200).json(successResponse);
     }
-    res.status(409).json({
-      message: "error",
-      status: 409,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const description = error.description;
+    const errorMessage = customError({ resCode: status, message, description })
+    return res.status(status).json(errorMessage);
   }
 });
 
@@ -99,11 +107,15 @@ router.post("/login", async (req, res) => {
         user.lockUntil = new Date(Date.now() + 10 * 60 * 1000); // Lock for 10 minutes
       }
       await user.save();
-      res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const description = error.description;
+    const errorMessage = customError({ resCode: status, message, description })
+    return res.status(status).json(errorMessage);
   }
 });
 

@@ -35,7 +35,7 @@ const twohundredResponse = (data = {}) => {
         ...data,
         timestamp: currentTime.toISOString(),
         apiVersion: "V2",
-        createdBy: "Carmel Polytechnic Professional Security",
+        createdBy: "Dparkz CCET website team",
         dev: "∞ Infinity ∞"
     };
 
