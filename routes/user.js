@@ -4,65 +4,99 @@ const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const verifyToken = require("../utils/authMiddleware");
-//models
-const User = require("../Models/User");
-const Event = require("../Models/Event");
-const Register = require("../Models/Register");
 
 dotenv.config();
-
-// const {
-//   roles,
-//   twohundredResponse,
-//   fourNotNineResponse,
-//   resMessages,
-//   twoNotOneResponse,
-//   sanitizedUserList,
-//   abstractedUserData,
-//   customError,
-//   sanitizedLetterList,
-//   sanitizedLetterData,
-//   formatDate,
-// } = require("../Utils/Helpers");
 
 const saltRounds = 12;
 
 // Register endpoint
 router.post("/register", async (req, res) => {
   try {
+    const {
+      email,
+      firstName,
+      lastName,
+      password,
+      semester,
+      college,
+      department,
+    } = req.body;
+
+    if (
+      !email &&
+      !firstName &&
+      !lastName &&
+      !password &&
+      !semester &&
+      !college &&
+      !department
+    ) {
+      throw { status: 400, message: "Please fill the required fields" };
+    }
+
+    if (!firstName) {
+      throw { status: 400, message: "first name field is required" };
+    } else if (!password) {
+      throw { status: 400, message: "Password field is required" };
+    } else if (!email) {
+      throw { status: 400, message: "Email field is required" };
+    } else if (!department) {
+      throw { status: 400, message: "Department field is required" };
+    } else if (!semester) {
+      throw { status: 400, message: "Semester field is required" };
+    } else if (!lastName) {
+      throw { status: 400, message: "Last name field is required" };
+    }
+
     const userExist = await User.findOne({ email: req.body.email });
+
+    if (userExist) {
+      throw {
+        status: 409,
+        message: "User already exists",
+        description: "Please try again with another email",
+      };
+    }
+
     if (!userExist) {
-      const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
       const user = new User({
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
+        firstName,
+        lastName,
+        email,
         password: hashedPassword,
-        semester: req.body.semester,
-        college: req.body.college,
-        department: req.body.department,
+        semester,
+        college,
+        department,
       });
       await user.save();
-      return res.status(200).json({ status: "ok" });
+      const successResponse = twohundredResponse({
+        message: "Registered successfully",
+        description: "Please login to continue",
+        redirectUrl: "/login",
+      });
+      return res.status(200).json(successResponse);
     }
-    res.status(409).json({
-      message: "error",
-      status: 409,
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || "Internal Server Error";
+    const description = error.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
   }
 });
 
 // Login endpoint
 router.post("/login", async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const { email, password } = req.body;
 
+    const user = await User.findOne({ email });
+    console.log(user);
+    if (!user) {
+      throw { status: 404, message: resMessages.userNotfoundMsg };
+    }
     if (user.lockUntil > new Date()) {
       const timeDifferenceInMilliseconds = user.lockUntil - new Date();
       const timeDifferenceInMinutes = Math.ceil(
@@ -71,91 +105,54 @@ router.post("/login", async (req, res) => {
 
       throw {
         status: 403,
-        // message: resMessages.AccountLockedMsg,
+        message: resMessages.AccountLockedMsg,
         description: `Please try again after ${timeDifferenceInMinutes} minutes`,
       };
     }
 
-    const passwordMatch = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-    if (passwordMatch) {
-      user.loginAttempts = 0;
-      user.lockUntil = new Date(0);
-      await user.save();
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          username: { firstName: user.firstName, lastName: user.lastName },
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "1h",
-        }
-      );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-      return res.status(200).json({ token });
-    } else {
+    if (!isPasswordValid) {
       user.loginAttempts += 1;
+
       if (user.loginAttempts >= 3) {
         user.lockUntil = new Date(Date.now() + 10 * 60 * 1000); // Lock for 10 minutes
       }
+
       await user.save();
-      return res.status(401).json({ message: "Invalid credentials" });
+
+      throw { status: 400, message: "Invalid username or password" };
     }
-  } catch (err) {
-    console.error(err);
-    return res
-      .status(err.status || 500)
-      .json({ error: err.description || "Internal server error" });
+
+    user.loginAttempts = 0;
+    user.lockUntil = new Date(0);
+    await user.save();
+
+    const token = jwt.sign(
+      {
+        email: user?.email,
+        userId: user._id,
+      },
+      "sparkz",
+      { expiresIn: "1d" }
+    );
+
+    const successResponseMsg = twohundredResponse({
+      message: resMessages.AuthSuccessMsg,
+      accessToken: token,
+    });
+    return res.status(200).json(successResponseMsg);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || "Internal Server Error";
+    const description = error.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
   }
 });
 
-router.post("/:userid/event/register", async (req, res) => {
-  const getUserId = req.params.userid;
-  const eventId = req.body.event;
-  console.log(req.body);
-  const reg = new Register({ registeredUserId: getUserId, eventId: eventId });
-  reg.save();
-  res.status(201).json({ status: "ok" });
-  try {
-  } catch (err) {
-    console.error("Error fetching: ", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch Registered events" });
-  }
+router.get("/profile", verifyToken, (req, res) => {
+  return res.status(200).json({ message: "Protected route accessed" });
 });
-
-router.get("/:userid/profile", async (req, res) => {
-  const getUserId = req.params.userid;
-  try {
-    const registered = await Register.find({
-      registeredUserId: getUserId,
-    })
-      .populate("registeredUserId")
-      .populate("eventId");
-    if (registered) {
-      return res.status(200).json({ data: registered });
-    }
-  } catch (err) {
-    console.error("Error fetching: ", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch Registered events" });
-  }
-});
-
-router.get("/events/:department", async (req, res) => {
-  try {
-    const searchDep = req.params.department;
-    const events = await Event.find({ department: searchDep });
-    return res.status(200).json({ data: events });
-  } catch (err) {
-    console.error("Error fetching events:", err);
-    return res.status(500).json({ message: "Failed to fetch events" });
-  }
-});
-
 module.exports = router;
