@@ -46,17 +46,15 @@ router.post("/register", async (req, res) => {
         department: req.body.department,
       });
       await user.save();
-
-      const successResponse = twohundredResponse({ message: "Resgistered successfully", redirectUrl: "/login" })
-      return res.status(200).json(successResponse);
+      return res.status(200).json({ status: "ok" });
     }
-  } catch (error) {
-    console.error(error);
-    const status = error.status || 500;
-    const message = error.message || 'Internal Server Error';
-    const description = error.description;
-    const errorMessage = customError({ resCode: status, message, description })
-    return res.status(status).json(errorMessage);
+    res.status(409).json({
+      message: "error",
+      status: 409,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -100,7 +98,7 @@ router.post("/login", async (req, res) => {
         }
       );
 
-      res.status(200).json({ token });
+      return res.status(200).json({ token });
     } else {
       user.loginAttempts += 1;
       if (user.loginAttempts >= 3) {
@@ -109,17 +107,13 @@ router.post("/login", async (req, res) => {
       await user.save();
       return res.status(401).json({ message: "Invalid credentials" });
     }
-  } catch (error) {
-    console.error(error);
-    const status = error.status || 500;
-    const message = error.message || 'Internal Server Error';
-    const description = error.description;
-    const errorMessage = customError({ resCode: status, message, description })
-    return res.status(status).json(errorMessage);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/profile", verifyToken, (req, res) => {
-  res.status(200).json({ message: "Protected route accessed" });
+  return res.status(200).json({ message: "Protected route accessed" });
 });
 module.exports = router;

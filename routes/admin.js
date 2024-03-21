@@ -28,7 +28,7 @@ router.post("/new", (req, res) => {
     return res.status(201).json({ status: "ok" });
   } catch (err) {
     console.log(err);
-    res.status(500);
+    return res.status(500);
   }
 });
 
