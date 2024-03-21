@@ -3,10 +3,17 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const verifyToken = require("../utils/authMiddleware");
-
+const verifyToken = require("../libs/Auth");
+//models
+const User = require("../Models/User");
+const Event = require("../Models/Event");
+const Register = require("../Models/Register");
 dotenv.config();
-
+const {
+  twohundredResponse,
+  resMessages,
+  customError,
+} = require("../Utils/Helpers");
 const saltRounds = 12;
 
 // Register endpoint
@@ -93,7 +100,6 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    console.log(user);
     if (!user) {
       throw { status: 404, message: resMessages.userNotfoundMsg };
     }
@@ -151,8 +157,52 @@ router.post("/login", async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
-
-router.get("/profile", verifyToken, (req, res) => {
-  return res.status(200).json({ message: "Protected route accessed" });
+//user profile
+router.get("/:userid/profile", async (req, res) => {
+  const getUserId = req.params.userid;
+  console.log(getUserId);
+  try {
+    const registered = await Register.find({
+      registeredUserId: getUserId,
+    })
+      .populate("registeredUserId")
+      .populate("eventId");
+    if (registered) {
+      return res.status(200).json({ data: registered });
+    }
+  } catch (err) {
+    console.error("Error fetching: ", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch Registered events" });
+  }
 });
+//fetch data for each department
+router.get("/events/:department", async (req, res) => {
+  try {
+    const searchDep = req.params.department;
+    const events = await Event.find({ department: searchDep });
+    return res.status(200).json({ data: events });
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    return res.status(500).json({ message: "Failed to fetch events" });
+  }
+});
+//user register new event
+router.post("/:userid/event/register", async (req, res) => {
+  const getUserId = req.params.userid;
+  const eventId = req.body.event;
+  console.log(req.body);
+  const reg = new Register({ registeredUserId: getUserId, eventId: eventId });
+  reg.save();
+  res.status(201).json({ status: "ok" });
+  try {
+  } catch (err) {
+    console.error("Error fetching: ", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch Registered events" });
+  }
+});
+
 module.exports = router;
