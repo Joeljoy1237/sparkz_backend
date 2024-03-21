@@ -35,8 +35,7 @@ const twohundredResponse = (data = {}) => {
         ...data,
         timestamp: currentTime.toISOString(),
         apiVersion: "V2",
-        createdBy: "Dparkz CCET website team",
-        dev: "∞ Infinity ∞"
+        createdBy: "Sparkz CCET technical team (Obcydians)",
     };
 
     // if (data?.description) {
@@ -68,8 +67,7 @@ const twoNotOneResponse = (data = {}) => {
         ...data,
         timestamp: currentTime.toISOString(),
         apiVersion: "V2",
-        createdBy: "Carmel Polytechnic Professional Security",
-        dev: "∞ Infinity ∞"
+        createdBy: "Sparkz CCET technical team (Obcydians)",
     };
 };
 
@@ -149,8 +147,8 @@ const customError = (data = {}) => {
         ...data,
         timestamp: currentTime.toISOString(),
         apiVersion: "V2",
-        createdBy: "Carmel Polytechnic Professional Security",
-        dev: "∞ Infinity ∞"
+        createdBy: "Sparkz CCET technical team (Obcydians)",
+        // dev: "∞ Infinity ∞"
     };
 
     // Conditionally include the 'description' parameter if it has a value
@@ -259,11 +257,12 @@ const abstractedUserData = (userObj, updated) => {
     const { loginAttempts, lockUntil, lastUpdatedBy, resetTokenUsed, ...userAbstractedObj } = userObj._doc;
     const newData = {
         _id: userAbstractedObj?._id,
-        username: userAbstractedObj?.username,
+        firstName: userAbstractedObj?.firstName,
+        lastName: userAbstractedObj?.lastName,
         email: userAbstractedObj?.email,
         semester: userAbstractedObj?.semester,
         department: userAbstractedObj.department,
-        role: userAbstractedObj?.role,
+        college: userAbstractedObj.college,
         createdAt: {
             date: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').format('DD/MM/YYYY , hh:mm A'),
             ago: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').fromNow(),

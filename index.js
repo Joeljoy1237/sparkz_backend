@@ -7,8 +7,6 @@ const userRoute = require("./routes/user");
 const adminRoute = require("./routes/admin");
 const connectToDB = require("./utils/database");
 
-connectToDB();
-
 dotenv.config();
 const app = express();
 
@@ -28,8 +26,8 @@ app.use(bodyParser.json());
 //         });
 // };
 
-app.use("/api/v1/user", userRoute);
-app.use("/api/v1/admin", adminRoute);
+app.use("/api/v2/user", userRoute);
+app.use("/api/v2/admin", adminRoute);
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -61,6 +59,6 @@ app.get("/api/v2/", (req, res) => {
 // };
 
 app.listen(process.env.PORT || 9000, async () => {
-  // connectDb();
+  connectToDB();
   console.log(`Server started listening at port ${process.env.PORT}`);
 });
