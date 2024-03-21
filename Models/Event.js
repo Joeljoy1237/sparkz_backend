@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const moment = require("moment");
 const eventSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -64,7 +64,7 @@ const eventSchema = new mongoose.Schema({
   ],
 });
 
-eventSchema.set('toJSON', {
+eventSchema.set("toJSON", {
   transform: function (doc, ret, options) {
     const createdAt = moment(ret.createdAt);
     const updatedAt = moment(ret.updatedAt);
@@ -74,20 +74,20 @@ eventSchema.set('toJSON', {
     const updatedAgo = updatedAt.from(now);
 
     ret.createdAt = {
-      date: createdAt.format('DD/MM/YYYY , HH:mm'),
-      ago: createdAgo
+      date: createdAt.format("DD/MM/YYYY , HH:mm"),
+      ago: createdAgo,
     };
 
     ret.updatedAt = {
-      date: updatedAt.format('DD/MM/YYYY , HH:mm'),
-      ago: updatedAgo
+      date: updatedAt.format("DD/MM/YYYY , HH:mm"),
+      ago: updatedAgo,
     };
 
     return ret;
-  }
+  },
 });
 
-eventSchema.pre('save', function (next) {
+eventSchema.pre("save", function (next) {
   this.updatedAt = new Date();
   next();
 });

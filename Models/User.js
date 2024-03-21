@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const moment = require("moment");
 
 const userSchema = new mongoose.Schema(
   {
@@ -42,7 +43,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-userSchema.set('toJSON', {
+userSchema.set("toJSON", {
   transform: function (doc, ret, options) {
     const createdAt = moment(ret.createdAt);
     const updatedAt = moment(ret.updatedAt);
@@ -52,20 +53,20 @@ userSchema.set('toJSON', {
     const updatedAgo = updatedAt.from(now);
 
     ret.createdAt = {
-      date: createdAt.format('DD/MM/YYYY , HH:mm'),
-      ago: createdAgo
+      date: createdAt.format("DD/MM/YYYY , HH:mm"),
+      ago: createdAgo,
     };
 
     ret.updatedAt = {
-      date: updatedAt.format('DD/MM/YYYY , HH:mm'),
-      ago: updatedAgo
+      date: updatedAt.format("DD/MM/YYYY , HH:mm"),
+      ago: updatedAgo,
     };
 
     return ret;
-  }
+  },
 });
 
-userSchema.pre('save', function (next) {
+userSchema.pre("save", function (next) {
   this.updatedAt = new Date();
   next();
 });

@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../Models/User");
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const verifyToken = require("../utils/authMiddleware");
+//models
+const User = require("../Models/User");
+const Event = require("../Models/Event");
+const Register = require("../Models/Register");
 
 dotenv.config();
 
@@ -109,7 +112,50 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/profile", verifyToken, (req, res) => {
-  return res.status(200).json({ message: "Protected route accessed" });
+router.post("/:userid/event/register", async (req, res) => {
+  const getUserId = req.params.userid;
+  const eventId = req.body.event;
+  console.log(req.body);
+  const reg = new Register({ registeredUserId: getUserId, eventId: eventId });
+  reg.save();
+  res.status(201).json({ status: "ok" });
+  try {
+  } catch (err) {
+    console.error("Error fetching: ", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch Registered events" });
+  }
 });
+
+router.get("/:userid/profile", async (req, res) => {
+  const getUserId = req.params.userid;
+  try {
+    const registered = await Register.find({
+      registeredUserId: getUserId,
+    })
+      .populate("registeredUserId")
+      .populate("eventId");
+    if (registered) {
+      return res.status(200).json({ data: registered });
+    }
+  } catch (err) {
+    console.error("Error fetching: ", err);
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch Registered events" });
+  }
+});
+
+router.get("/events/:department", async (req, res) => {
+  try {
+    const searchDep = req.params.department;
+    const events = await Event.find({ department: searchDep });
+    return res.status(200).json({ data: events });
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    return res.status(500).json({ message: "Failed to fetch events" });
+  }
+});
+
 module.exports = router;
