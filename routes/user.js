@@ -13,7 +13,7 @@ const {
   twohundredResponse,
   resMessages,
   customError,
-} = require("../Utils/Helpers");
+} = require("../utils/Helpers");
 const saltRounds = 12;
 
 // Register endpoint
