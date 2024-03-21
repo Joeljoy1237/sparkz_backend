@@ -3,17 +3,12 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const verifyToken = require("../libs/Auth");
+const { verifyUserToken } = require("../libs/Auth");
 //models
 const User = require("../Models/User");
 const Event = require("../Models/Event");
 const Register = require("../Models/Register");
 dotenv.config();
-const {
-  twohundredResponse,
-  resMessages,
-  customError,
-} = require("../Utils/Helpers");
 const saltRounds = 12;
 
 // Register endpoint
@@ -158,7 +153,7 @@ router.post("/login", async (req, res) => {
   }
 });
 //user profile
-router.get("/:userid/profile", async (req, res) => {
+router.get("/:userid/profile", verifyUserToken, async (req, res) => {
   const getUserId = req.params.userid;
   console.log(getUserId);
   try {
@@ -189,7 +184,7 @@ router.get("/events/:department", async (req, res) => {
   }
 });
 //user register new event
-router.post("/:userid/event/register", async (req, res) => {
+router.post("/:userid/event/register", verifyUserToken, async (req, res) => {
   const getUserId = req.params.userid;
   const eventId = req.body.event;
   console.log(req.body);
