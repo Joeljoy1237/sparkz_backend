@@ -8,6 +8,7 @@ const { verifyUserToken } = require("../libs/Auth");
 const User = require("../Models/User");
 const Event = require("../Models/Event");
 const Register = require("../Models/Register");
+const { customError, resMessages } = require("../utils/Helpers");
 dotenv.config();
 const saltRounds = 12;
 
