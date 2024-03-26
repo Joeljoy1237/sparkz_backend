@@ -3,12 +3,12 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const { verifyUserToken } = require("../libs/Auth");
+const Auth = require("../libs/Auth");
 //models
 const User = require("../Models/User");
 const Event = require("../Models/Event");
 const Register = require("../Models/Register");
-const { customError, resMessages, twohundredResponse } = require("../utils/Helpers");
+const { customError, resMessages, twohundredResponse, abstractedUserData, abstractedEventList, twoNotOneResponse } = require("../utils/Helpers");
 dotenv.config();
 const saltRounds = 12;
 
@@ -82,9 +82,9 @@ router.post("/register", async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    const status = error.status || 500;
-    const message = error.message || "Internal Server Error";
-    const description = error.description;
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
     const errorMessage = customError({ resCode: status, message, description });
     return res.status(status).json(errorMessage);
   }
@@ -146,59 +146,117 @@ router.post("/login", async (req, res) => {
     return res.status(200).json(successResponseMsg);
   } catch (error) {
     console.error(error);
-    const status = error.status || 500;
-    const message = error.message || "Internal Server Error";
-    const description = error.description;
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
     const errorMessage = customError({ resCode: status, message, description });
     return res.status(status).json(errorMessage);
   }
 });
+
+
+//get user details
+router.get('/getUserDetails', Auth.verifyUserToken, async (req, res) => {
+  try {
+    const userData = req.user;
+    const user = abstractedUserData(userData);
+    const registered = await Register.find({ registeredUserId: req.userId }).populate('event');
+
+      const sanitizedEventList = registered.map(event => ({
+          ...event.toObject(),
+          _id:event?._id,
+          imgUrl:event?.posterImg,
+      }));
+
+    user.registeredEvents = sanitizedEventList;
+
+    const successResponse = twohundredResponse({ message: "Here's your details:", data: user })
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
+
 //user profile
-router.get("/:userid/profile", verifyUserToken, async (req, res) => {
-  const getUserId = req.params.userid;
-  console.log(getUserId);
+// router.get("/:userid/profile", verifyUserToken, async (req, res) => {
+//   const getUserId = req.params.userid;
+//   console.log(getUserId);
+//   try {
+//     const registered = await Register.find({
+//       registeredUserId: getUserId,
+//     })
+//       .populate("registeredUserId")
+//       .populate("eventId");
+//     if (registered) {
+//       return res.status(200).json({ data: registered });
+//     }
+//   } catch (err) {
+//     console.error("Error fetching: ", err);
+//     return res
+//       .status(500)
+//       .json({ message: "Failed to fetch Registered events" });
+//   }
+// });
+// //fetch data for each department
+// router.get("/events/:department", async (req, res) => {
+//   try {
+//     const searchDep = req.params.department;
+//     const events = await Event.find({ department: searchDep });
+//     return res.status(200).json({ data: events });
+//   } catch (err) {
+//     console.error("Error fetching events:", err);
+//     return res.status(500).json({ message: "Failed to fetch events" });
+//   }
+// });
+
+//get event list -- not protected route
+router.get('/getEventList/:dep', async (req, res) => {
   try {
-    const registered = await Register.find({
-      registeredUserId: getUserId,
-    })
-      .populate("registeredUserId")
-      .populate("eventId");
-    if (registered) {
-      return res.status(200).json({ data: registered });
+    const depId = req.params.dep.toUpperCase();
+    const events = await Event.find({ department: depId });
+    console.log(events)
+    const eventList = abstractedEventList(events)
+    const successResponse = twohundredResponse({ status: 200, message: "Event list", data: eventList });
+    return res.status(200).json(successResponse)
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
+
+// //user register new event
+router.post("/eventRegister", Auth.verifyUserToken, async (req, res) => {
+  try {
+    const { eventId } = req.body;
+    if (!eventId) {
+      throw { status: 400, message: "Invalid event id" }
     }
-  } catch (err) {
-    console.error("Error fetching: ", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch Registered events" });
+    const existingRegistration = await Register.findOne({ registeredUserId: req.userId, eventId: eventId });
+    if (existingRegistration) {
+      throw { status: 400, message: "You have already registered for this event" };
+    }
+    const newRegistration = new Register({ registeredUserId: req.userId, eventId: eventId });
+    await newRegistration.save();
+    const successResponse = twoNotOneResponse({ status: 201, message: "Registered successfully" })
+    return res.status(201).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
   }
 });
-//fetch data for each department
-router.get("/events/:department", async (req, res) => {
-  try {
-    const searchDep = req.params.department;
-    const events = await Event.find({ department: searchDep });
-    return res.status(200).json({ data: events });
-  } catch (err) {
-    console.error("Error fetching events:", err);
-    return res.status(500).json({ message: "Failed to fetch events" });
-  }
-});
-//user register new event
-router.post("/:userid/event/register", verifyUserToken, async (req, res) => {
-  const getUserId = req.params.userid;
-  const eventId = req.body.event;
-  console.log(req.body);
-  const reg = new Register({ registeredUserId: getUserId, eventId: eventId });
-  reg.save();
-  res.status(201).json({ status: "ok" });
-  try {
-  } catch (err) {
-    console.error("Error fetching: ", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to fetch Registered events" });
-  }
-});
+
 
 module.exports = router;

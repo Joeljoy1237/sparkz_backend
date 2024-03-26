@@ -8,8 +8,8 @@ router.post("/new", (req, res) => {
     const event = new Event({
       title: data.title,
       department: data.department,
+      regFee:data.regFee,
       price: {
-        reg: data.price.reg,
         first: data.price.first,
         second: data.price.second,
         third: data.price.third,

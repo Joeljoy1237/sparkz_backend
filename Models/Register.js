@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 const moment = require("moment");
 const registerSchema = new mongoose.Schema(
   {
-    registeredUserId: {
+    registeredUser: {
       type: mongoose.Types.ObjectId,
       ref: "User",
     },
-    eventId: {
+    event: {
       type: mongoose.Types.ObjectId,
       ref: "Event",
     },

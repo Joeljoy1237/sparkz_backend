@@ -263,10 +263,10 @@ const abstractedUserData = (userObj, updated) => {
         semester: userAbstractedObj?.semester,
         department: userAbstractedObj.department,
         college: userAbstractedObj.college,
-        createdAt: {
-            date: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').format('DD/MM/YYYY , hh:mm A'),
-            ago: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').fromNow(),
-        },
+        // createdAt: {
+        //     date: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').format('DD/MM/YYYY , hh:mm A'),
+        //     ago: moment(userAbstractedObj?.createdAt).utcOffset('+05:30').fromNow(),
+        // },
     }
 
     if (updated) {
@@ -285,6 +285,16 @@ function formatDate(date) {
     return `${day}/${month}/${year}`;
 }
 
+const abstractedEventList = (events)=>{
+    const sanitizedEventList = events.map(event => ({
+        // ...event.toObject(),
+        _id:event?._id,
+        imgUrl:event?.posterImg,
+    }));
+
+    return sanitizedEventList;
+}
+
 module.exports = {
     roles,
     twoNotOneResponse,
@@ -301,5 +311,6 @@ module.exports = {
     customError,
     formatDate,
     resMessages,
-    transporter
+    transporter,
+    abstractedEventList
 }

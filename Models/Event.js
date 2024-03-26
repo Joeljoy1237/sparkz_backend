@@ -10,11 +10,11 @@ const eventSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
+  regFee: {
+    type: Number,
+    requried: true,
+  },
   price: {
-    reg: {
-      type: Number,
-      requried: true,
-    },
     first: {
       type: Number,
       required: true,
@@ -63,7 +63,7 @@ const eventSchema = new mongoose.Schema({
       },
     },
   ],
-});
+}, { timestamps: true, versionKey: false });
 
 eventSchema.set("toJSON", {
   transform: function (doc, ret, options) {

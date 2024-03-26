@@ -14,6 +14,7 @@ const verifyUserToken = async (req, res, next) => {
     }
     let token = req.headers.authorization.split(" ")[1];
 
+    console.log(token)
     if (!token) {
       throw { status: 403, message: resMessages.tokenNotFound };
     }
