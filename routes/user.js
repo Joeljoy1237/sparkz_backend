@@ -107,8 +107,7 @@ router.post("/login", async (req, res) => {
 
       throw {
         status: 403,
-        message: resMessages.AccountLockedMsg,
-        description: `Please try again after ${timeDifferenceInMinutes} minutes`,
+        message: `Account locked .Please try again after ${timeDifferenceInMinutes} minutes`,
       };
     }
 
@@ -136,11 +135,11 @@ router.post("/login", async (req, res) => {
         userId: user._id,
       },
       "sparkz",
-      { expiresIn: "1d" }
+      { expiresIn: "1w" }
     );
 
     const successResponseMsg = twohundredResponse({
-      message: resMessages.AuthSuccessMsg,
+      message: "Login successfull.",
       accessToken: token,
     });
     return res.status(200).json(successResponseMsg);
@@ -160,13 +159,15 @@ router.get('/getUserDetails', Auth.verifyUserToken, async (req, res) => {
   try {
     const userData = req.user;
     const user = abstractedUserData(userData);
-    const registered = await Register.find({ registeredUserId: req.userId }).populate('event');
+    const registered = await Register.find({ registeredUserId: req.userId }).populate('event','title department date time type price regFee posterImg');
 
       const sanitizedEventList = registered.map(event => ({
-          ...event.toObject(),
-          _id:event?._id,
-          imgUrl:event?.posterImg,
+        title:event?.title,
+        imgUrl:event?.posterImg,
+        ...event.toObject(),
       }));
+
+      console.log(sanitizedEventList)
 
     user.registeredEvents = sanitizedEventList;
 
@@ -240,11 +241,11 @@ router.post("/eventRegister", Auth.verifyUserToken, async (req, res) => {
     if (!eventId) {
       throw { status: 400, message: "Invalid event id" }
     }
-    const existingRegistration = await Register.findOne({ registeredUserId: req.userId, eventId: eventId });
+    const existingRegistration = await Register.findOne({ registeredUser: req.userId, event: eventId });
     if (existingRegistration) {
       throw { status: 400, message: "You have already registered for this event" };
     }
-    const newRegistration = new Register({ registeredUserId: req.userId, eventId: eventId });
+    const newRegistration = new Register({ registeredUser: req.userId, event: eventId });
     await newRegistration.save();
     const successResponse = twoNotOneResponse({ status: 201, message: "Registered successfully" })
     return res.status(201).json(successResponse);
