@@ -159,15 +159,15 @@ router.get('/getUserDetails', Auth.verifyUserToken, async (req, res) => {
   try {
     const userData = req.user;
     const user = abstractedUserData(userData);
-    const registered = await Register.find({ registeredUserId: req.userId }).populate('event','title department date time type price regFee posterImg');
+    const registered = await Register.find({ registeredUserId: req.userId }).populate('event', 'title department date time type price regFee posterImg');
 
-      const sanitizedEventList = registered.map(event => ({
-        title:event?.title,
-        imgUrl:event?.posterImg,
-        ...event.toObject(),
-      }));
+    const sanitizedEventList = registered.map(event => ({
+      title: event?.title,
+      imgUrl: event?.posterImg,
+      ...event.toObject(),
+    }));
 
-      console.log(sanitizedEventList)
+    console.log(sanitizedEventList)
 
     user.registeredEvents = sanitizedEventList;
 
@@ -259,5 +259,23 @@ router.post("/eventRegister", Auth.verifyUserToken, async (req, res) => {
   }
 });
 
+
+//api to get featured events -- not protected route
+router.get('/getFeaturedEvents', async (req, res) => {
+  try {
+    const events = await Event.find({ isFeatured: true });
+    const successResponse = twohundredResponse({ message: "Featured events", data: events, eventsCount: events?.length });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+//api to list all events -- not protected route
 
 module.exports = router;

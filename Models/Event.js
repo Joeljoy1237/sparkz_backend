@@ -6,25 +6,27 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
   department: {
     type: String,
     require: true,
   },
   regFee: {
-    type: Number,
+    type: String,
     requried: true,
   },
-  price: {
-    first: {
-      type: Number,
-      required: true,
-    },
-    second: {
-      type: Number,
-    },
-    third: {
-      type: Number,
-    },
+  firstPrize: {
+    type: String,
+    required: true,
+  },
+  secondPrize: {
+    type: String,
+  },
+  thirdPrize: {
+    type: String,
   },
   priceCount: {
     type: Number,
