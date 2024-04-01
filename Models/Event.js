@@ -34,18 +34,18 @@ const eventSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true,
   },
   date: {
     type: String,
-    required: true,
   },
   time: {
     type: String,
-    required: true,
   },
   desc: {
     type: String,
+  },
+  venue:{
+    type:String
   },
   rules: [String],
   posterImg: {
