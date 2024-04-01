@@ -26,11 +26,11 @@ router.post("/newevent", async (req, res) => {
     });
 
     await event.save();
-    const successResponse = {
+    const successResponse = twoNotOneResponse({
       success: true,
       message: "Event created successfully",
       event: event // Optionally, send back the created event
-    };
+    })
     return res.status(201).json(successResponse);
   } catch (error) {
     console.error(error);
