@@ -20,7 +20,6 @@ const eventSchema = new mongoose.Schema({
   },
   firstPrize: {
     type: String,
-    required: true,
   },
   secondPrize: {
     type: String,
