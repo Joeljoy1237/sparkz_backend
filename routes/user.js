@@ -279,7 +279,7 @@ router.get('/getFeaturedEvents', async (req, res) => {
 //api to list all events -- not protected route
 router.get('/getAllEvents', async (req, res) => {
   try {
-    const events = await Event.find();
+    const events = await Event.find().sort({ title: "desc" })
     const successResponse = twohundredResponse({ message: "Featured events", data: events, eventsCount: events?.length });
     return res.status(200).json(successResponse);
   } catch (error) {
