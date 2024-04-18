@@ -292,4 +292,24 @@ router.get('/getAllEvents', async (req, res) => {
   }
 })
 
+//api to get single event details
+router.post('/getEventDetailsById', async (req, res) => {
+  try {
+    const { eventId } = req.body;
+    const event = await Event.findById({ _id: eventId });
+    if (!event) {
+      throw { status: 404, message: "Opps!!! Event doesn't exists" }
+    }
+    const successResponse = twohundredResponse({ message: "Event details", data: event });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
+
 module.exports = router;
