@@ -360,10 +360,12 @@ router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async 
       return res.status(404).json(errorMessage);
     }
 
-    const isRegistered = await Register.exists({ registeredUser: req.userId, event: eventId });
-
+    const isRegistered = await Register.findOne({ registeredUser: req.userId, event: eventId });
+    console.log(isRegistered)
     // Add isRegistered parameter to event object
-    event.isRegistered = isRegistered;
+    if (isRegistered) {
+      event.isRegistered = true;
+    }
 
     const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: event });
     return res.status(200).json(successResponse);
