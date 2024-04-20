@@ -43,8 +43,8 @@ const eventSchema = new mongoose.Schema({
   desc: {
     type: String,
   },
-  venue:{
-    type:String
+  venue: {
+    type: String
   },
   rules: [String],
   posterImg: {
@@ -63,6 +63,10 @@ const eventSchema = new mongoose.Schema({
       },
     },
   ],
+  isRegistered: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true, versionKey: false });
 
 eventSchema.set("toJSON", {

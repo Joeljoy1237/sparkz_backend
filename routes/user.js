@@ -352,20 +352,20 @@ router.post('/getEventDetailsById', async (req, res) => {
 router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async (req, res) => {
   try {
     const { eventId } = req.body;
-    const event = await Event.find({ _id: eventId });
-    // const registeredEvents = await Register.find({ registeredUser: req.userId, eventId: { $in: events.map(event => event._id) } }).populate('event');
-    const isRegistered = await Register.findOne({ registeredUser: req.userId, event: eventId })
 
-    console.log(isRegistered)
-    // if(isRegistered){
-    //   event?.isRegistered = isRegistered
-    // }
-    const updatedEvent = {
-      ...event,
-      isRegistered: isRegistered ? true : false
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      const errorMessage = customError({ resCode: 404, message: "Event not found" });
+      return res.status(404).json(errorMessage);
     }
 
-    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: updatedEvent });
+    const isRegistered = await Register.exists({ registeredUser: req.userId, event: eventId });
+
+    // Add isRegistered parameter to event object
+    event.isRegistered = isRegistered;
+
+    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: event });
     return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
@@ -376,6 +376,9 @@ router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async 
     return res.status(status).json(errorMessage);
   }
 });
+
+
+
 
 //api to register for team events
 
