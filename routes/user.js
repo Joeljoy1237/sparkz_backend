@@ -234,6 +234,43 @@ router.get('/getEventList/:dep', async (req, res) => {
   }
 })
 
+//api to check whether registered already
+router.get('/getEventListForLoggedInUsers/:dep', Auth.verifyUserToken, async (req, res) => {
+  try {
+    const depId = req.params.dep.toUpperCase();
+    const events = await Event.find({ department: depId });
+    console.log(req.userId)
+    // const registeredEvents = await Register.find({ registeredUser: req.userId, eventId: { $in: events.map(event => event._id) } }).populate('event');
+    const registeredEvents = await Register.find({ registeredUser: req.userId })
+      .populate('event')
+      .exec();
+    
+    console.log(registeredEvents)
+    // Map events to add isRegistered parameter
+    const eventList = events.map(event => {
+      // Check if the event is in registeredEvents
+      const isRegistered = registeredEvents.some(regEvent => regEvent.event.equals(event._id));
+      // Return the event with isRegistered parameter
+      return {
+        ...event.toObject(),
+        isRegistered
+      };
+    });
+
+    const successResponse = twohundredResponse({ status: 200, message: "Event list", data: eventList });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+
+
 // //user register new event
 router.post("/eventRegister", Auth.verifyUserToken, async (req, res) => {
   try {
