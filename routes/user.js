@@ -244,7 +244,7 @@ router.get('/getEventListForLoggedInUsers/:dep', Auth.verifyUserToken, async (re
     const registeredEvents = await Register.find({ registeredUser: req.userId })
       .populate('event')
       .exec();
-    
+
     console.log(registeredEvents)
     // Map events to add isRegistered parameter
     const eventList = events.map(event => {
@@ -349,11 +349,39 @@ router.post('/getEventDetailsById', async (req, res) => {
   }
 })
 
+router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async (req, res) => {
+  try {
+    const { eventId } = req.body;
+    const event = await Event.find({ _id: eventId });
+    // const registeredEvents = await Register.find({ registeredUser: req.userId, eventId: { $in: events.map(event => event._id) } }).populate('event');
+    const isRegistered = await Register.findOne({ registeredUser: req.userId, event: eventId })
+
+    console.log(isRegistered)
+    // if(isRegistered){
+    //   event?.isRegistered = isRegistered
+    // }
+    const updatedEvent = {
+      ...event,
+      isRegistered: isRegistered ? true : false
+    }
+
+    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: updatedEvent });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
+
 //api to register for team events
 
 router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
   try {
-    const { eventId, team} = req.body;
+    const { eventId, team } = req.body;
 
     // Check if eventId is provided and valid
     // if (!mongoose.Types.ObjectId.isValid(eventId)) {
