@@ -312,4 +312,53 @@ router.post('/getEventDetailsById', async (req, res) => {
   }
 })
 
+//api to register for team events
+
+router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
+  try {
+    const { eventId, team} = req.body;
+
+    // Check if eventId is provided and valid
+    // if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    //   throw { status: 400, message: "Invalid eventId" };
+    // }
+
+    // Create an array to store team members
+    const teamMembers = [];
+
+    // Iterate over each team member data and validate
+    for (const memberData of team) {
+      const { studentName, class: studentClass, school, schoolAddress } = memberData;
+
+      // Check if required fields are provided
+      if (!studentName || !studentClass || !school || !schoolAddress) {
+        throw { status: 400, message: "Incomplete student data" };
+      }
+
+      // Push validated team member data to teamMembers array
+      teamMembers.push({ studentName, class: studentClass, school, schoolAddress });
+    }
+
+    // Create a new registration entry with event ID and team data
+    const registration = new Register({
+      registeredUser: req.user._id, // Assuming authenticated user's ID is stored in req.user._id
+      event: eventId,
+      team: teamMembers
+    });
+
+    // Save the registration
+    await registration.save();
+
+    // Respond with success message
+    res.status(200).json({ message: "Registration successful" });
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
+
 module.exports = router;

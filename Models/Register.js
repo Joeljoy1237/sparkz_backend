@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
+
 const registerSchema = new mongoose.Schema(
   {
     registeredUser: {
@@ -10,6 +11,25 @@ const registerSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "Event",
     },
+    team: [
+      {
+        studentName: {
+          type: String
+        },
+        category:{
+          type:String
+        },
+        class: {
+          type: String
+        },
+        school: {
+          type: String
+        },
+        schoolAddress: {
+          type: String
+        },
+      }
+    ]
   },
   { timestamps: true, versionKey: false }
 );
