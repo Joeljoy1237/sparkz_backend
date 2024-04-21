@@ -159,8 +159,8 @@ router.get('/getUserDetails', Auth.verifyUserToken, async (req, res) => {
   try {
     const userData = req.user;
     const user = abstractedUserData(userData);
-    const registered = await Register.find({ registeredUserId: req.userId }).populate('event', 'title department date time type price regFee posterImg');
-
+    const registered = await Register.find({ registeredUser: req.userId }).populate('event', 'title department date time type price regFee posterImg');
+    console.log(req.userId)
     const sanitizedEventList = registered.map(event => ({
       title: event?.title,
       imgUrl: event?.posterImg,
