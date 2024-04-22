@@ -19,8 +19,11 @@ router.post("/newevent", async (req, res) => {
       date: data.date,
       time: data.time,
       desc: data.desc,
+      teamCountMax:data.teamCountMax,
+      teamCountMin:data.teamCountMin,
       venue: data.venue,
       rules: data.rules,
+      isTeam:data.isTeam,
       posterImg: data.posterImg,
       cordinator: data.cordinator,
     });
