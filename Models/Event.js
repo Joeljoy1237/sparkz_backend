@@ -51,6 +51,14 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isTeam:{
+    type:Boolean,
+    default:false
+  },
+  teamCount:{
+    type:Number,
+    default:0
+  },
   cordinator: [
     {
       name: {
