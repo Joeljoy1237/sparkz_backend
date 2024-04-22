@@ -55,11 +55,11 @@ const eventSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
-  teamCount:{
+  teamCountMax:{
     type:Number,
     default:0
   },
-  minCount:{
+  teamCountMin:{
     type:Number,
     default:0
   },
