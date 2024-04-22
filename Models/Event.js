@@ -59,6 +59,10 @@ const eventSchema = new mongoose.Schema({
     type:Number,
     default:0
   },
+  minCount:{
+    type:Number,
+    default:0
+  },
   cordinator: [
     {
       name: {
