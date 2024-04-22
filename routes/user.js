@@ -363,7 +363,7 @@ router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async 
     const isRegistered = await Register.findOne({ registeredUser: req.userId, event: eventId });
     // Add isRegistered parameter to event object
 
-    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: event,registerStatus:isRegistered ? true : false });
+    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: event, registerStatus: isRegistered ? true : false });
     return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
@@ -382,7 +382,7 @@ router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async 
 
 router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
   try {
-    const { eventId, team } = req.body;
+    const { eventId, team, dep } = req.body;
 
     // Check if eventId is provided and valid
     // if (!mongoose.Types.ObjectId.isValid(eventId)) {
@@ -394,15 +394,21 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
 
     // Iterate over each team member data and validate
     for (const memberData of team) {
-      const { studentName, class: studentClass, school, schoolAddress } = memberData;
+      const { studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college } = memberData;
 
       // Check if required fields are provided
-      if (!studentName || !studentClass || !school || !schoolAddress) {
-        throw { status: 400, message: "Incomplete student data" };
+      if (dep === "BSC") {
+        if (!studentName || !studentClass || !school || !schoolAddress) {
+          throw { status: 400, message: "Incomplete student data" };
+        }
+      } else {
+        if (!studentName || !email || !semester || !college) {
+          throw { status: 400, message: "Incomplete student data" };
+        }
       }
 
       // Push validated team member data to teamMembers array
-      teamMembers.push({ studentName, class: studentClass, school, schoolAddress });
+      teamMembers.push({ studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college });
     }
 
     // Create a new registration entry with event ID and team data
@@ -416,7 +422,8 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
     await registration.save();
 
     // Respond with success message
-    res.status(200).json({ message: "Registration successful" });
+    const successResponse = twohundredResponse({ status: 200, message: "Registration successful" });
+    return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
     const status = error?.status || 500;

@@ -28,6 +28,18 @@ const registerSchema = new mongoose.Schema(
         schoolAddress: {
           type: String
         },
+        email: {
+          type: String
+        },
+        mobNo: {
+          type: Number
+        },
+        semester: {
+          type: String
+        },
+        college: {
+          type: String
+        },
       }
     ]
   },
