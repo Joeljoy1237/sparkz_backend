@@ -75,10 +75,6 @@ const eventSchema = new mongoose.Schema({
       },
     },
   ],
-  isRegistered: {
-    type: Boolean,
-    default: false
-  }
 }, { timestamps: true, versionKey: false });
 
 eventSchema.set("toJSON", {
