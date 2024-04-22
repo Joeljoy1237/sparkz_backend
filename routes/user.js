@@ -398,12 +398,30 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
 
       // Check if required fields are provided
       if (dep === "BSC") {
-        if (!studentName || !studentClass || !school || !schoolAddress) {
-          throw { status: 400, message: "Incomplete student data" };
+        if (!studentName && !studentClass && !school && !schoolAddress) {
+          throw { status: 400, message: "Please fill the required fields" };
+        }
+        if (!studentName || studentName === "") {
+          throw { status: 400, message: "Name is required" };
+        } else if (!studentClass || studentClass === "") {
+          throw { status: 400, message: "Class is required" };
+        } else if (!school || school === "") {
+          throw { status: 400, message: "School is required" };
+        } else if (!schoolAddress || schoolAddress === "") {
+          throw { status: 400, message: "schoolAddress is required" };
         }
       } else {
-        if (!studentName || !email || !semester || !college) {
-          throw { status: 400, message: "Incomplete student data" };
+        if (!studentName && !email && !semester && !college) {
+          throw { status: 400, message: "Please fill the required fields" };
+        }
+        if (!studentName || studentName === "") {
+          throw { status: 400, message: "Name is required" };
+        } else if (!email || email === "") {
+          throw { status: 400, message: "Email is required" };
+        } else if (!semester || semester === "") {
+          throw { status: 400, message: "Semester is required" };
+        } else if (!college || college === "") {
+          throw { status: 400, message: "College is required" };
         }
       }
 
