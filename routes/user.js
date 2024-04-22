@@ -411,7 +411,7 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
           throw { status: 400, message: "schoolAddress is required" };
         }
       } else {
-        if (!studentName && !email && !semester && !college) {
+        if (!studentName && !email && !semester && !college && !mobNo) {
           throw { status: 400, message: "Please fill the required fields" };
         }
         if (!studentName || studentName === "") {
@@ -422,6 +422,8 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
           throw { status: 400, message: "Semester is required" };
         } else if (!college || college === "") {
           throw { status: 400, message: "College is required" };
+        } else if (!mobNo || mobNo === "") {
+          throw { status: 400, message: "Mobile number is required" };
         }
       }
 
