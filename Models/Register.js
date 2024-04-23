@@ -19,6 +19,9 @@ const registerSchema = new mongoose.Schema(
         category:{
           type:String
         },
+        dob:{
+          type:String
+        },
         class: {
           type: String
         },

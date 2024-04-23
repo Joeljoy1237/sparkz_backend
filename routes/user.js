@@ -391,11 +391,11 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
 
     // Iterate over each team member data and validate
     for (const memberData of team) {
-      const { studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college } = memberData;
+      const { studentName, class: studentClass,dob, school, schoolAddress, email, mobNo, semester, college } = memberData;
 
       // Check if required fields are provided
       if (dep === "BSC") {
-        if (!studentName && !studentClass && !school && !schoolAddress) {
+        if (!studentName && !studentClass && !school && !schoolAddress && !dob) {
           throw { status: 400, message: "Please fill the required fields" };
         }
         if (!studentName || studentName === "") {
@@ -406,6 +406,8 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
           throw { status: 400, message: "School is required" };
         } else if (!schoolAddress || schoolAddress === "") {
           throw { status: 400, message: "schoolAddress is required" };
+        } else if (!dob || dob === "") {
+          throw { status: 400, message: "Dob is required" };
         }
       } else {
         if (!studentName && !email && !semester && !college && !mobNo) {
