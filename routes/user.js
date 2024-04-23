@@ -30,7 +30,6 @@ router.post("/register", async (req, res) => {
       !firstName &&
       !lastName &&
       !password &&
-      !semester &&
       !college &&
       !department
     ) {
@@ -45,8 +44,6 @@ router.post("/register", async (req, res) => {
       throw { status: 400, message: "Email field is required" };
     } else if (!department) {
       throw { status: 400, message: "Department field is required" };
-    } else if (!semester) {
-      throw { status: 400, message: "Semester field is required" };
     } else if (!lastName) {
       throw { status: 400, message: "Last name field is required" };
     }
