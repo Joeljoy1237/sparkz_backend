@@ -427,7 +427,7 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
       }
 
       // Push validated team member data to teamMembers array
-      teamMembers.push({ studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college });
+      teamMembers.push({ studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college,dob });
     }
 
     // Create a new registration entry with event ID and team data
