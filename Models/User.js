@@ -26,6 +26,9 @@ const userSchema = new mongoose.Schema(
     college: {
       type: String,
     },
+    mobileNo: {
+      type: String,
+    },
     department: {
       type: String,
       default: null,

@@ -23,6 +23,7 @@ router.post("/register", async (req, res) => {
       semester,
       college,
       department,
+      mobileNo
     } = req.body;
 
     if (
@@ -46,6 +47,8 @@ router.post("/register", async (req, res) => {
       throw { status: 400, message: "Department field is required" };
     } else if (!lastName) {
       throw { status: 400, message: "Last name field is required" };
+    }else if (!mobileNo) {
+      throw { status: 400, message: "Mobile number field is required" };
     }
 
     const userExist = await User.findOne({ email: req.body.email });
@@ -68,6 +71,7 @@ router.post("/register", async (req, res) => {
         semester,
         college,
         department,
+        mobileNo
       });
       await user.save();
       const successResponse = twohundredResponse({
