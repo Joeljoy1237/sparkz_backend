@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    keamScore: {
+      type: Number,
+      default: null,
+    }, 
     loginAttempts: {
       type: Number,
       default: 0,

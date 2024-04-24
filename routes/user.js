@@ -11,6 +11,12 @@ const Register = require("../Models/Register");
 const { customError, resMessages, twohundredResponse, abstractedUserData, abstractedEventList, twoNotOneResponse } = require("../utils/Helpers");
 dotenv.config();
 const saltRounds = 12;
+const XLSX = require('xlsx');
+const multer = require('multer');
+const Question = require("../Models/Question");
+const storage = multer.memoryStorage(); // Store the file in memory
+const upload = multer({ storage: storage });
+const pdf = require('pdf-parse');
 
 // Register endpoint
 router.post("/register", async (req, res) => {
@@ -47,7 +53,7 @@ router.post("/register", async (req, res) => {
       throw { status: 400, message: "Department field is required" };
     } else if (!lastName) {
       throw { status: 400, message: "Last name field is required" };
-    }else if (!mobileNo) {
+    } else if (!mobileNo) {
       throw { status: 400, message: "Mobile number field is required" };
     }
 
@@ -378,7 +384,6 @@ router.post('/getEventDetailsByIdForLoggedInUsers', Auth.verifyUserToken, async 
 
 
 
-
 //api to register for team events
 
 router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
@@ -395,7 +400,7 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
 
     // Iterate over each team member data and validate
     for (const memberData of team) {
-      const { studentName, class: studentClass,dob, school, schoolAddress, email, mobNo, semester, college } = memberData;
+      const { studentName, class: studentClass, dob, school, schoolAddress, email, mobNo, semester, college } = memberData;
 
       // Check if required fields are provided
       if (dep === "BSC") {
@@ -431,7 +436,7 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
       }
 
       // Push validated team member data to teamMembers array
-      teamMembers.push({ studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college,dob });
+      teamMembers.push({ studentName, class: studentClass, school, schoolAddress, email, mobNo, semester, college, dob });
     }
 
     // Create a new registration entry with event ID and team data
@@ -456,5 +461,164 @@ router.post('/registerWithTeam', Auth.verifyUserToken, async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
+
+//keam
+router.post('/uploadQuestions', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      throw { status: 400, message: 'File not provided' };
+    }
+
+    const fileData = req.file.buffer;
+    const workbook = XLSX.read(fileData, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+
+    if (!sheetName) {
+      throw { status: 400, message: 'No sheet found in the Excel file' };
+    }
+
+    const sheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+    if (!jsonData || jsonData.length === 0) {
+      throw { status: 400, message: "No data found in the Excel sheet" };
+    }
+
+    // Map Excel data to MongoDB schema
+    const questionsToInsert = await Promise.all(jsonData.map(async (rowData) => {
+      // Extract fields from the Excel row
+      const { question, a, b, c, d, e, correct } = rowData;
+      console.log(question)
+      // Construct the question object for MongoDB
+      return {
+        question, // Assuming 'question' field exists in the Excel
+        a, b, c, d, e, correct  // Assuming these fields exist in the Excel
+      };
+    }));
+
+    // Insert questions into MongoDB
+    const questions = await Question.insertMany(questionsToInsert);
+
+    const successResponse = twoNotOneResponse({ message: `${questions.length} question data added successfully`, accessToken: req.accessToken });
+    // const successResponse = twoNotOneResponse({ data:questionsToInsert, accessToken: req.accessToken });
+    return res.status(201).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+
+
+//api to get questions
+router.get('/getAllQuestion', async (req, res) => {
+  try {
+    const questions = await Question.find();
+
+    // Parse each question from string to objec
+
+    const successResponse = twohundredResponse({ message: "Question details:", data: questions });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+//apit to check correct answer
+router.post('/submit', async (req, res) => {
+  try {
+    const { answers } = req.body;
+
+    // Initialize score
+    let score = 0;
+
+    // Iterate through each answer
+    for (const answer of answers) {
+      // Find the question from the database using _id
+      const question = await Question.findById({ _id: answer._id });
+      console.log(question)
+      // If question not found, continue to the next answer
+      if (!question) continue;
+
+      // Check if chosen option matches the correct option in the question
+      if (answer.chosenOption === question.CORRECT) {
+        // If correct, increment score by 4
+        console.log("correct")
+        score += 4;
+      } else {
+        // If incorrect, decrement score by 1
+        console.log("Incorrect")
+        score -= 1;
+      }
+    }
+
+    // Prepare response with score
+    const response = {
+      message: "Score calculated successfully",
+      score: score
+    };
+
+    // Send the response
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+//api to enter question
+router.post('/insertQuestion', async (req, res) => {
+  try {
+    const { question, a, b, c, d, e, correct } = req.body;
+    if (!question) {
+      throw { status: 400, message: "Question is required" };
+    } else if (!a) {
+      throw { status: 400, message: "Option A is required" };
+    } else if (!b) {
+      throw { status: 400, message: "Option B is required" };
+    } else if (!c) {
+      throw { status: 400, message: "Option C is required" };
+    } else if (!d) {
+      throw { status: 400, message: "Option D is required" };
+    } else if (!e) {
+      throw { status: 400, message: "Option E is required" };
+    } else if (!correct) {
+      throw { status: 400, message: "Correct is required" };
+    }
+    // Parse each question from string to object
+    const newQuestion = new Question({
+      question,
+      a,
+      b,
+      c,
+      d,
+      e,
+      correct
+    });
+
+    const questionDetail = await newQuestion.save();
+
+    const successResponse = twohundredResponse({ message: "Question insterted:", data: questionDetail });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
 
 module.exports = router;

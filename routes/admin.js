@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Event = require("../Models/Event");
-const { customError, twoNotOneResponse } = require("../utils/Helpers");
+const { customError, twoNotOneResponse, twohundredResponse } = require("../utils/Helpers");
+const Register = require("../Models/Register");
 
 router.post("/newevent", async (req, res) => {
   try {
@@ -19,11 +20,11 @@ router.post("/newevent", async (req, res) => {
       date: data.date,
       time: data.time,
       desc: data.desc,
-      teamCountMax:data.teamCountMax,
-      teamCountMin:data.teamCountMin,
+      teamCountMax: data.teamCountMax,
+      teamCountMin: data.teamCountMin,
       venue: data.venue,
       rules: data.rules,
-      isTeam:data.isTeam,
+      isTeam: data.isTeam,
       posterImg: data.posterImg,
       cordinator: data.cordinator,
     });
@@ -51,6 +52,23 @@ router.post("/newevent", async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
+//api to get registered events by admin
+router.get('/eventResgistrations/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params
+    const eventResgistrations = await Register.find({ event: eventId }).populate('event registeredUser', 'email firstName dob class college semester department title department');
+    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: eventResgistrations,count:eventResgistrations?.length });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
 
 
 module.exports = router;
