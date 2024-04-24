@@ -50,11 +50,13 @@ router.post("/register", async (req, res) => {
     } else if (!email) {
       throw { status: 400, message: "Email field is required" };
     } else if (!department) {
-      throw { status: 400, message: "Department field is required" };
+      throw { status: 400, message: "Department/Class field is required" };
     } else if (!lastName) {
       throw { status: 400, message: "Last name field is required" };
     } else if (!mobileNo) {
       throw { status: 400, message: "Mobile number field is required" };
+    } else if (!college) {
+      throw { status: 400, message: "College/School field is required" };
     }
 
     const userExist = await User.findOne({ email: req.body.email });
