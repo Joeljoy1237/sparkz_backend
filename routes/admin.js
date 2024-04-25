@@ -58,7 +58,7 @@ router.get('/eventResgistrations/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params
     const eventResgistrations = await Register.find({ event: eventId }).populate('event registeredUser', 'email firstName mobileNo dob class college semester department title department isTeam mobNo');
-    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: eventResgistrations,count:eventResgistrations?.length });
+    const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: eventResgistrations, count: eventResgistrations?.length });
     return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
@@ -69,6 +69,29 @@ router.get('/eventResgistrations/:eventId', async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 })
+
+//api to get stats
+router.get('/registrationStats', async (req, res) => {
+  try {
+    const eventRegistrations = await Register.find().populate('event');
+    const bsc = eventRegistrations.filter(registration => registration.event.department === 'BSC').length;
+    const cse = eventRegistrations.filter(registration => registration.event.department === 'CSE').length;
+    const eee = eventRegistrations.filter(registration => registration.event.department === 'EEE').length;
+    const mech = eventRegistrations.filter(registration => registration.event.department === 'MECH').length;
+    const civil = eventRegistrations.filter(registration => registration.event.department === 'CIVIL').length;
+    const successResponse = twohundredResponse({ status: 200, message: "Registration stats", data: { total: eventRegistrations.length, bsc, cse, eee, mech, civil } });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
+
+
 
 
 module.exports = router;
