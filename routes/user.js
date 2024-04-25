@@ -230,8 +230,7 @@ router.get('/getEventList/:dep', async (req, res) => {
     const depId = req.params.dep.toUpperCase();
     const events = await Event.find({ department: depId });
     console.log(events)
-    const eventList = abstractedEventList(events)
-    const successResponse = twohundredResponse({ status: 200, message: "Event list", data: eventList });
+    const successResponse = twohundredResponse({ status: 200, message: "Event list", data: events });
     return res.status(200).json(successResponse)
   } catch (error) {
     console.error(error);
