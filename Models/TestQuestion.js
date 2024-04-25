@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const moment = require("moment");
 
-const questionSchema = new mongoose.Schema({
+const testQuestionSchema = new mongoose.Schema({
   question: {
     type: String,
   },
@@ -33,7 +33,7 @@ const questionSchema = new mongoose.Schema({
   },
 }, { timestamps: true, versionKey: false });
 
-questionSchema.set("toJSON", {
+testQuestionSchema.set("toJSON", {
   transform: function (doc, ret, options) {
     const createdAt = moment(ret.createdAt);
     const updatedAt = moment(ret.updatedAt);
@@ -56,11 +56,11 @@ questionSchema.set("toJSON", {
   },
 });
 
-questionSchema.pre("save", function (next) {
+testQuestionSchema.pre("save", function (next) {
   this.updatedAt = new Date();
   next();
 });
 
-const Question = mongoose.model("Question", questionSchema);
+const TestQuestion = mongoose.model("TEST_Question", testQuestionSchema);
 
-module.exports = Question;
+module.exports = TestQuestion;

@@ -17,6 +17,7 @@ const Question = require("../Models/Question");
 const storage = multer.memoryStorage(); // Store the file in memory
 const upload = multer({ storage: storage });
 const pdf = require('pdf-parse');
+const TestQuestion = require("../Models/TestQuestion");
 
 // Register endpoint
 router.post("/register", async (req, res) => {
@@ -500,6 +501,7 @@ router.post('/uploadQuestions', upload.single('file'), async (req, res) => {
 
     // Insert questions into MongoDB
     const questions = await Question.insertMany(questionsToInsert);
+    // const questions = await TestQuestion.insertMany(questionsToInsert);
 
     const successResponse = twoNotOneResponse({ message: `${questions.length} question data added successfully`, accessToken: req.accessToken });
     // const successResponse = twoNotOneResponse({ data:questionsToInsert, accessToken: req.accessToken });
@@ -524,51 +526,6 @@ router.get('/getAllQuestion', async (req, res) => {
 
     const successResponse = twohundredResponse({ message: "Question details:", data: questions });
     return res.status(200).json(successResponse);
-  } catch (error) {
-    console.error(error);
-    const status = error.status || 500;
-    const message = error.message || 'Internal Server Error';
-    const errorMessage = customError({ resCode: status, message });
-    return res.status(status).json(errorMessage);
-  }
-});
-
-//apit to check correct answer
-router.post('/submit', async (req, res) => {
-  try {
-    const { answers } = req.body;
-
-    // Initialize score
-    let score = 0;
-
-    // Iterate through each answer
-    for (const answer of answers) {
-      // Find the question from the database using _id
-      const question = await Question.findById({ _id: answer._id });
-      console.log(question)
-      // If question not found, continue to the next answer
-      if (!question) continue;
-
-      // Check if chosen option matches the correct option in the question
-      if (answer.chosenOption === question.CORRECT) {
-        // If correct, increment score by 4
-        console.log("correct")
-        score += 4;
-      } else {
-        // If incorrect, decrement score by 1
-        console.log("Incorrect")
-        score -= 1;
-      }
-    }
-
-    // Prepare response with score
-    const response = {
-      message: "Score calculated successfully",
-      score: score
-    };
-
-    // Send the response
-    return res.status(200).json(response);
   } catch (error) {
     console.error(error);
     const status = error.status || 500;
@@ -620,6 +577,141 @@ router.post('/insertQuestion', async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
+//api to login student
+router.post('/keamLogin', async (req, res) => {
+  try {
+    const { email, dob } = req.body;
+    if (!email || email === "") {
+      throw { status: 400, message: "Email is required" }
+    } else if (!dob || dob === "") {
+      throw { status: 400, messaeg: "Date of birth is required" }
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw { status: 404, message: "User doesn't exists" }
+    }
+
+    const isFound = await Register.findOne({ registeredUser: user?._id });
+    if (dob !== isFound?.team[0]?.dob) {
+      throw { status: 400, message: "Date of birth mismatch" }
+    }
+
+    const token = jwt.sign(
+      {
+        email: user?.email,
+        userId: user._id,
+        dob: dob
+      },
+      "keam_mock",
+      { expiresIn: "1w" }
+    );
+
+
+    const successResponse = twohundredResponse({ status: 200, message: "Loggedin successfully", accessToken: token });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+router.get('/getKeamQuestions',Auth.verifyKeamUserToken, async (req, res) => {
+  try {
+    const questions = await Question.aggregate([
+      { $sample: { size: 10 } } 
+    ]);
+
+    const successResponse = twohundredResponse({ message: "Shuffled question details:", data: questions });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+//apit to check correct answer
+router.post('/submitAnswers',Auth.verifyKeamUserToken, async (req, res) => {
+  try {
+    const { userId, answers } = req.body;
+
+    // Initialize score
+    let score = 0;
+
+    // Iterate through each answer
+    for (const answer of answers) {
+      // Find the question from the database using _id
+      const question = await Question.findById(answer._id);
+
+      // If question not found, continue to the next answer
+      if (!question) continue;
+
+      // Check if chosen option matches the correct option in the question
+      if (answer.chosenOption === question.correct) {
+        // If correct, increment score by 4
+        score += 4;
+      } else {
+        // If incorrect, decrement score by 1
+        score -= 1;
+      }
+    }
+
+    // Update the User model with the calculated score
+    await User.findByIdAndUpdate(userId, { keamScore: score });
+
+    // Prepare response with score
+    const response = {
+      message: "Score calculated and updated successfully",
+      score: score
+    };
+
+    // Send the response
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+
+//api to calculate the winners
+router.get('/winners', async (req, res) => {
+  try {
+    // Find all users and select only required fields
+    const users = await User.find({}, 'firstName lastName email keamScore');
+
+    // Sort users by keamScore in descending order
+    const sortedUsers = users.sort((a, b) => b.keamScore - a.keamScore);
+
+    // Prepare response with sorted users
+    const response = {
+      message: "Winners retrieved successfully",
+      winners: sortedUsers
+    };
+
+    // Send the response
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    const status = error.status || 500;
+    const message = error.message || 'Internal Server Error';
+    const errorMessage = customError({ resCode: status, message });
+    return res.status(status).json(errorMessage);
+  }
+});
+
+
 
 
 module.exports = router;

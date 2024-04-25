@@ -3,6 +3,7 @@ const router = express.Router();
 const Event = require("../Models/Event");
 const { customError, twoNotOneResponse, twohundredResponse } = require("../utils/Helpers");
 const Register = require("../Models/Register");
+const Question = require("../Models/Question");
 
 router.post("/newevent", async (req, res) => {
   try {
@@ -92,6 +93,53 @@ router.get('/registrationStats', async (req, res) => {
 })
 
 
+router.get('/test', async (req, res) => {
+  try {
+    const ids = [
+      "662a68fac4d2b5dbff35f340",
+      "662a68fac4d2b5dbff35f341",
+      "662a68fac4d2b5dbff35f342",
+      "662a68fac4d2b5dbff35f343",
+      "662a68fac4d2b5dbff35f344",
+      "662a68fac4d2b5dbff35f345",
+      "662a68fac4d2b5dbff35f346",
+      "662a68fac4d2b5dbff35f347",
+      "662a68fac4d2b5dbff35f348",
+      "662a68fac4d2b5dbff35f349",
+      "662a68fac4d2b5dbff35f34a",
+      "662a68fac4d2b5dbff35f34b",
+      "662a68fac4d2b5dbff35f34c",
+      "662a68fac4d2b5dbff35f34d",
+      "662a68fac4d2b5dbff35f34e",
+      "662a68fac4d2b5dbff35f34f",
+      "662a68fac4d2b5dbff35f350",
+      "662a68fac4d2b5dbff35f351",
+      "662a68fac4d2b5dbff35f352",
+      "662a68fac4d2b5dbff35f353",
+      "662a68fac4d2b5dbff35f354",
+      "662a68fac4d2b5dbff35f355",
+      "662a68fac4d2b5dbff35f356",
+      "662a68fac4d2b5dbff35f357",
+      "662a68fac4d2b5dbff35f358",
+      "662a68fac4d2b5dbff35f359",
+      "662a68fac4d2b5dbff35f35a",
+      "662a68fac4d2b5dbff35f35b",
+      "662a68fac4d2b5dbff35f35c",
+      "662a68fac4d2b5dbff35f35d",
+      "662a68fac4d2b5dbff35f35e"
+    ]
+    await Question.deleteMany({ _id: { $in: ids } });
 
+    const successResponse = twohundredResponse({ status: 200, message: "Registration stats" });
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
 
 module.exports = router;
