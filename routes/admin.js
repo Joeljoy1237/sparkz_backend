@@ -57,7 +57,7 @@ router.post("/newevent", async (req, res) => {
 router.get('/eventResgistrations/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params
-    const eventResgistrations = await Register.find({ event: eventId }).populate('event registeredUser', 'email firstName mobileNo mobNo dob class college semester department title department isTeam');
+    const eventResgistrations = await Register.find({ event: eventId }).populate('event registeredUser', 'email firstName mobileNo dob class college semester department title department isTeam mobNo');
     const successResponse = twohundredResponse({ status: 200, message: "Event Details", data: eventResgistrations,count:eventResgistrations?.length });
     return res.status(200).json(successResponse);
   } catch (error) {
