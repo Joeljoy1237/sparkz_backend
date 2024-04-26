@@ -712,6 +712,20 @@ router.get('/winners', async (req, res) => {
 });
 
 
-
+router.get('/getKeamUserDetails', Auth.verifyKeamUserToken, async (req, res) => {
+  try {
+    const userData = req.user;
+    const user = abstractedUserData(userData);
+    const successResponse = twohundredResponse({ message: "Here's your details:", data: user })
+    return res.status(200).json(successResponse);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+})
 
 module.exports = router;
