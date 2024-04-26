@@ -631,7 +631,7 @@ router.get('/getKeamQuestions', Auth.verifyKeamUserToken, async (req, res) => {
       { $sample: { size: allQuestions.length } }
     ]);
 
-    const successResponse = twohundredResponse({ message: "Shuffled question details:", data: shuffledQuestions,count:shuffledQuestions?.length });
+    const successResponse = twohundredResponse({ message: "Shuffled question details:", data: shuffledQuestions, count: shuffledQuestions?.length });
     return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
@@ -644,9 +644,9 @@ router.get('/getKeamQuestions', Auth.verifyKeamUserToken, async (req, res) => {
 
 
 //apit to check correct answer
-router.post('/submitAnswers',Auth.verifyKeamUserToken, async (req, res) => {
+router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
   try {
-    const { userId, answers } = req.body;
+    const { answers } = req.body;
 
     // Initialize score
     let score = 0;
@@ -670,7 +670,7 @@ router.post('/submitAnswers',Auth.verifyKeamUserToken, async (req, res) => {
     }
 
     // Update the User model with the calculated score
-    await User.findByIdAndUpdate(userId, { keamScore: score });
+    await User.findByIdAndUpdate(req?.userId, { keamScore: score });
 
     // Prepare response with score
     const response = {
