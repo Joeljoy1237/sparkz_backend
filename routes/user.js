@@ -674,8 +674,7 @@ router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
 
     // Prepare response with score
     const response = {
-      message: "Score calculated and updated successfully",
-      score: score
+      message: "Exam completed successfully",
     };
 
     // Send the response
