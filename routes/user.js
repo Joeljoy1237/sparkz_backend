@@ -660,7 +660,7 @@ router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
       if (!question) continue;
 
       // Check if chosen option matches the correct option in the question
-      if (answer.chosenOption === question.correct) {
+      if (answer.selectedValue === question.correct) {
         // If correct, increment score by 4
         score += 4;
       } else {
@@ -692,11 +692,14 @@ router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
 //api to calculate the winners
 router.get('/winners', async (req, res) => {
   try {
-    // Find all users and select only required fields
-    const users = await User.find({}, 'firstName lastName email keamScore');
+    // Find all users and select only required fields including keamScore
+    const users = await User.find({}, 'firstName lastName email keamScore').lean();
 
-    // Sort users by keamScore in descending order
-    const sortedUsers = users.sort((a, b) => b.keamScore - a.keamScore);
+    // Convert the Mongoose Query object to an array
+    const usersArray = Array.from(users);
+
+    // Sort users by keamScore in descending order using Array.sort()
+    const sortedUsers = usersArray.sort((a, b) => b.keamScore - a.keamScore);
 
     // Prepare response with sorted users
     const response = {
@@ -714,6 +717,7 @@ router.get('/winners', async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
 
 
 router.get('/getKeamUserDetails', Auth.verifyKeamUserToken, async (req, res) => {
