@@ -692,14 +692,11 @@ router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
 //api to calculate the winners
 router.get('/winners', async (req, res) => {
   try {
-    // Find all users and select only required fields including keamScore
-    const users = await User.find({}, 'firstName lastName email keamScore').lean();
+    // Find users with non-null keamScore
+    const users = await User.find({ keamScore: { $ne: null } }, 'firstName lastName email keamScore').lean();
 
-    // Convert the Mongoose Query object to an array
-    const usersArray = Array.from(users);
-
-    // Sort users by keamScore in descending order using Array.sort()
-    const sortedUsers = usersArray.sort((a, b) => b.keamScore - a.keamScore);
+    // Sort users by keamScore in descending order
+    const sortedUsers = users.sort((a, b) => b.keamScore - a.keamScore);
 
     // Prepare response with sorted users
     const response = {
@@ -717,6 +714,7 @@ router.get('/winners', async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
 
 
 
