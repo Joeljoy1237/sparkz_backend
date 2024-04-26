@@ -621,13 +621,17 @@ router.post('/keamLogin', async (req, res) => {
   }
 });
 
-router.get('/getKeamQuestions',Auth.verifyKeamUserToken, async (req, res) => {
+router.get('/getKeamQuestions', Auth.verifyKeamUserToken, async (req, res) => {
   try {
-    const questions = await Question.aggregate([
-      { $sample: { size: 10 } } 
+    // Retrieve all questions from the Question model
+    const allQuestions = await Question.find();
+
+    // Shuffle the questions using MongoDB aggregation
+    const shuffledQuestions = await Question.aggregate([
+      { $sample: { size: allQuestions.length } }
     ]);
 
-    const successResponse = twohundredResponse({ message: "Shuffled question details:", data: questions });
+    const successResponse = twohundredResponse({ message: "Shuffled question details:", data: shuffledQuestions,count:shuffledQuestions?.length });
     return res.status(200).json(successResponse);
   } catch (error) {
     console.error(error);
@@ -637,6 +641,7 @@ router.get('/getKeamQuestions',Auth.verifyKeamUserToken, async (req, res) => {
     return res.status(status).json(errorMessage);
   }
 });
+
 
 //apit to check correct answer
 router.post('/submitAnswers',Auth.verifyKeamUserToken, async (req, res) => {
