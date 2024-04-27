@@ -629,9 +629,10 @@ router.get('/getKeamQuestions', Auth.verifyKeamUserToken, async (req, res) => {
     const allQuestions = await Question.find();
 
     // Shuffle the questions using MongoDB aggregation
-    const shuffledQuestions = await Question.aggregate([
-      { $sample: { size: allQuestions.length } }
-    ]);
+    // const shuffledQuestions = await Question.aggregate([
+    //   { $sample: { size: allQuestions.length } }
+    // ]);
+    const shuffledQuestions = await TestQuestion.find();
 
     const successResponse = twohundredResponse({ message: "Shuffled question details:", data: shuffledQuestions, count: shuffledQuestions?.length });
     return res.status(200).json(successResponse);
