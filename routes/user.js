@@ -33,32 +33,34 @@ router.post("/register", async (req, res) => {
       mobileNo
     } = req.body;
 
-    if (
-      !email &&
-      !firstName &&
-      !lastName &&
-      !password &&
-      !college &&
-      !department
-    ) {
-      throw { status: 400, message: "Please fill the required fields" };
-    }
+    // if (
+    //   !email &&
+    //   !firstName &&
+    //   !lastName &&
+    //   !password &&
+    //   !college &&
+    //   !department
+    // ) {
+    //   throw { status: 400, message: "Please fill the required fields" };
+    // }
 
-    if (!firstName) {
-      throw { status: 400, message: "first name field is required" };
-    } else if (!password) {
-      throw { status: 400, message: "Password field is required" };
-    } else if (!email) {
+    // if (!firstName) {
+    //   throw { status: 400, message: "first name field is required" };
+    // } else if (!password) {
+    //   throw { status: 400, message: "Password field is required" };
+    // }
+    if (!email) {
       throw { status: 400, message: "Email field is required" };
-    } else if (!department) {
-      throw { status: 400, message: "Department/Class field is required" };
-    } else if (!lastName) {
-      throw { status: 400, message: "Last name field is required" };
-    } else if (!mobileNo) {
-      throw { status: 400, message: "Mobile number field is required" };
-    } else if (!college) {
-      throw { status: 400, message: "College/School field is required" };
     }
+    //  else if (!department) {
+    //   throw { status: 400, message: "Department/Class field is required" };
+    // } else if (!lastName) {
+    //   throw { status: 400, message: "Last name field is required" };
+    // } else if (!mobileNo) {
+    //   throw { status: 400, message: "Mobile number field is required" };
+    // } else if (!college) {
+    //   throw { status: 400, message: "College/School field is required" };
+    // }
 
     const userExist = await User.findOne({ email: req.body.email });
 
@@ -733,5 +735,46 @@ router.get('/getKeamUserDetails', Auth.verifyKeamUserToken, async (req, res) => 
     return res.status(status).json(errorMessage);
   }
 })
+
+// keam login
+router.post("/keamLogin", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw { status: 404, message: resMessages.userNotfoundMsg };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw { status: 400, message: "Invalid username or password" };
+    }
+    await user.save();
+
+    const token = jwt.sign(
+      {
+        email: user?.email,
+        userId: user._id,
+      },
+      "keam_mock",
+      { expiresIn: "1w" }
+    );
+
+    const successResponseMsg = twohundredResponse({
+      message: "Login successfull.",
+      accessToken: token,
+    });
+    return res.status(200).json(successResponseMsg);
+  } catch (error) {
+    console.error(error);
+    const status = error?.status || 500;
+    const message = error?.message || "Internal Server Error";
+    const description = error?.description;
+    const errorMessage = customError({ resCode: status, message, description });
+    return res.status(status).json(errorMessage);
+  }
+});
 
 module.exports = router;
