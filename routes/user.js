@@ -737,7 +737,7 @@ router.get('/getKeamUserDetails', Auth.verifyKeamUserToken, async (req, res) => 
 })
 
 // keam login
-router.post("/keamLogin", async (req, res) => {
+router.post("/keamTestLogin", async (req, res) => {
   try {
     const { email, password } = req.body;
 
