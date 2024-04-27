@@ -657,7 +657,7 @@ router.post('/submitAnswers', Auth.verifyKeamUserToken, async (req, res) => {
     // Iterate through each answer
     for (const answer of answers) {
       // Find the question from the database using _id
-      const question = await Question.findById(answer._id);
+      const question = await TestQuestion.findById(answer._id);
 
       // If question not found, continue to the next answer
       if (!question) continue;
